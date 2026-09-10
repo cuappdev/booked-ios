@@ -45,6 +45,16 @@
 			path = BookedUITests;
 			sourceTree = "<group>";
 		};
+		612C15E53052081F00C5CEB9 /* Networking */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		612C15EF305208BD00C5CEB9 /* Utils */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Utils;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +89,8 @@
 				292B0260305205C100C161CF /* BookedTests */,
 				292B026A305205C100C161CF /* BookedUITests */,
 				292B0251305205BF00C161CF /* Products */,
+				612C15E53052081F00C5CEB9 /* Networking */,
+				612C15EF305208BD00C5CEB9 /* Utils */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +121,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				292B0252305205BF00C161CF /* Booked */,
+				612C15E53052081F00C5CEB9 /* Networking */,
+				612C15EF305208BD00C5CEB9 /* Utils */,
 			);
 			name = Booked;
 			packageProductDependencies = (
