@@ -42,7 +42,7 @@ struct Library: Identifiable, Equatable, Hashable {
     }
 }
 
-//Dummy data from le old repo
+//Dummy data from the old repo
 extension Library {
     static let sampleData: [Library] = [
         Library(
