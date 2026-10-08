@@ -8,22 +8,36 @@
 import SwiftUI
 
 // MARK: - Constants
+//
+//  Constants.swift
+//  Booked
+//
+
+import SwiftUI
+
+// MARK: - Constants
 struct Constants {
     enum Colors {
-        static let bookedGreen = Color(hex: "#3f4f44")
-        static let creamBg = Color(hex: "#faf7f1")
+        // Palette
+        static let bookedGreen = Color(hex: "#3f4f44") // Primary
+        static let creamBg  = Color(hex: "#faf7f1") // Background
+        static let cardSurface = Color(hex: "#fefdfb") // Card surface
+        static let cardBorder = Color(hex: "#e5e1d3") // Card border
+        static let chip = Color(hex: "#eaeae5") // Chip
+        static let selectedChip = Color(hex: "#deede3") // Selected chip
+
+        // Text
         static let primaryText = Color(hex: "#595c5a")
         static let secondaryText = Color(hex: "#6b6a60")
-        static let tertiaryText = Color(hex: "#c8c8c8")
-        static let cardBorder = Color(hex: "#e5e1d3")
-    }
-    
-    enum AppSpacing {
-        static let xs: CGFloat = 4
-        static let sm: CGFloat = 8
-        static let md: CGFloat = 16
-        static let lg: CGFloat = 24
-        static let xl: CGFloat = 32
+        static let tertiaryText = Color(hex: "#a1a1a1")
+        
+        //Library booking text in LibraryDetailView
+        static let libraryHeading = Color(hex: "#0F2A1D")
+
+        // Status
+        static let bookableAccent = Color(hex: "#5da271")
+        static let closedRed = Color(hex: "#a94a48")
+        
     }
 }
 
