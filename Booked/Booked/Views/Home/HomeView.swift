@@ -25,81 +25,25 @@ struct FilterOption: Hashable {
 }
 
 struct HomeView: View {
-    var libraries: [Library] = Library.sampleData
+    @State private var viewModel: HomeViewModel
 
-    @State private var searchText = ""
-    @State private var availableNow = true
-    @State private var activeFilters: [ActiveFilter] = []
-    @State private var favorites: Set<Int> = []
+    // View-only state
     @State private var showFilters = false
     @State private var showAllLibraries = false
     @State private var selectedLibrary: Library?
+
+    init(libraries: [Library] = Library.sampleData) {
+        _viewModel = State(initialValue: HomeViewModel(libraries: libraries))
+    }
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
         GridItem(.flexible(), spacing: 14)
     ]
-
-    /// ContentView overlays CustomTabBar (60pt) on top of this view,
-    /// so leave room at the bottom of the scroll content.
+    
     private let tabBarClearance: CGFloat = 76
 
     private let collapsedLibraryCount = 6
-
-    // MARK: Filtering
-
-    private var hasActiveFilters: Bool {
-        !searchText.isEmpty || !activeFilters.isEmpty
-    }
-
-    private func selected(_ group: FilterGroup) -> Set<String> {
-        Set(activeFilters.filter { $0.group == group }.map(\.value))
-    }
-
-    private func matches(_ lib: Library) -> Bool {
-        if availableNow && lib.spaceInfo.reservationType == "By request" { return false }
-
-        let libs = selected(.library)
-        if !libs.isEmpty && !libs.contains(lib.spaceInfo.library) { return false }
-
-        let res = selected(.reservation)
-        if !res.isEmpty && !res.contains(lib.reservationLabel) { return false }
-
-        let noise = selected(.noise)
-        if !noise.isEmpty && noise.isDisjoint(with: lib.features.soundLevel) { return false }
-
-        let types = selected(.spaceType)
-        if !types.isEmpty && !types.contains(lib.spaceInfo.category) { return false }
-
-        let q = searchText.trimmingCharacters(in: .whitespaces)
-        if !q.isEmpty {
-            let hay = "\(lib.title) \(lib.spaceInfo.library) \(lib.spaceInfo.category)"
-            if !hay.localizedCaseInsensitiveContains(q) { return false }
-        }
-        return true
-    }
-
-    private var filtered: [Library] { libraries.filter(matches) }
-
-    private func toggle(_ group: FilterGroup, _ value: String) {
-        let f = ActiveFilter(group: group, value: value)
-        if let i = activeFilters.firstIndex(of: f) { activeFilters.remove(at: i) } else { activeFilters.append(f) }
-    }
-
-    private func isOn(_ group: FilterGroup, _ value: String) -> Bool {
-        activeFilters.contains(ActiveFilter(group: group, value: value))
-    }
-
-    private func counted(_ values: [String]) -> [FilterOption] {
-        Dictionary(grouping: values, by: { $0 })
-            .map { FilterOption(value: $0.key, count: $0.value.count) }
-            .sorted { ($0.count ?? 0, $1.value) > ($1.count ?? 0, $0.value) }
-    }
-
-    private var libraryOptions: [FilterOption] { counted(libraries.map { $0.spaceInfo.library }) }
-    private var spaceTypeOptions: [FilterOption] { counted(libraries.map { $0.spaceInfo.category }) }
-    private let reservationOptions = ["Bookable", "By request", "Walk-in"].map { FilterOption(value: $0, count: nil) }
-    private let noiseOptions = ["Silent", "Quiet", "Collaborative"].map { FilterOption(value: $0, count: nil) }
 
     // MARK: Body
 
@@ -109,22 +53,26 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
+                    
                     logo
+                    
                     searchBar
+                    
                     chipRow
+                    
                     VStack(alignment: .leading, spacing: 16) {
                         sectionHeader
                         LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(filtered) { library in
+                            ForEach(viewModel.filtered) { library in
                                 LibraryCardView(
                                     library: library,
-                                    isFavorite: favorites.contains(library.id),
-                                    onToggleFavorite: { toggleFavorite(library) },
+                                    isFavorite: viewModel.isFavorite(library),
+                                    onToggleFavorite: { viewModel.toggleFavorite(library) },
                                     onTap: { selectedLibrary = library }
                                 )
                             }
                         }
-                        if filtered.isEmpty {
+                        if viewModel.filtered.isEmpty {
                             Text("No rooms match your search.")
                                 .font(.subheadline)
                                 .foregroundStyle(Constants.Colors.secondaryText)
@@ -142,12 +90,12 @@ struct HomeView: View {
         .sheet(isPresented: $showFilters) {
             filterSheet
         }
-        // Full-screen so the detail page (and its Book Now button) sits above the tab bar
+      
         .fullScreenCover(item: $selectedLibrary) { library in
             LibraryDetailView(
                 library: library,
-                isFavorite: favorites.contains(library.id),
-                onToggleFavorite: { toggleFavorite(library) },
+                isFavorite: viewModel.isFavorite(library),
+                onToggleFavorite: { viewModel.toggleFavorite(library) },
                 onBack: { selectedLibrary = nil },
                 onBook: { /* TODO: start booking flow */ }
             )
@@ -170,7 +118,7 @@ struct HomeView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 18))
                     .foregroundStyle(Constants.Colors.secondaryText)
-                TextField("Where to book?", text: $searchText)
+                TextField("Where to book?", text: $viewModel.searchText)
                     .font(.system(size: 18))
                     .foregroundStyle(Constants.Colors.primaryText)
                     .submitLabel(.search)
@@ -193,12 +141,12 @@ struct HomeView: View {
     private var chipRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip("Available Now", selected: availableNow, removable: false) {
-                    availableNow.toggle()
+                chip("Available Now", selected: viewModel.availableNow, removable: false) {
+                    viewModel.availableNow.toggle()
                 }
-                ForEach(activeFilters, id: \.self) { f in
+                ForEach(viewModel.activeFilters, id: \.self) { f in
                     chip(f.value, selected: true, removable: true) {
-                        toggle(f.group, f.value)
+                        viewModel.toggle(f.group, f.value)
                     }
                 }
             }
@@ -223,17 +171,14 @@ struct HomeView: View {
 
     private var sectionHeader: some View {
         HStack {
-            Text(hasActiveFilters ? "\(filtered.count) rooms" : "Available now")
+            Text(viewModel.hasActiveFilters ? "\(viewModel.filtered.count) rooms" : "Available now")
                 .font(.system(size: 22))
                 .foregroundStyle(Constants.Colors.primaryText)
             Spacer()
-            if hasActiveFilters {
-                Button("Clear all") {
-                    searchText = ""
-                    activeFilters = []
-                }
-                .font(.system(size: 14))
-                .foregroundStyle(Constants.Colors.secondaryText)
+            if viewModel.hasActiveFilters {
+                Button("Clear all") { viewModel.clearAll() }
+                    .font(.system(size: 14))
+                    .foregroundStyle(Constants.Colors.secondaryText)
             }
         }
     }
@@ -248,15 +193,15 @@ struct HomeView: View {
                         .font(.system(size: 22))
                         .foregroundStyle(Constants.Colors.primaryText)
                     Spacer()
-                    Button("Clear all") { activeFilters = [] }
+                    Button("Clear all") { viewModel.clearFilters() }
                         .font(.system(size: 14))
                         .foregroundStyle(Constants.Colors.secondaryText)
                 }
 
-                filterSection("Library", group: .library, options: libraryOptions, collapsible: true)
-                filterSection("Reservation", group: .reservation, options: reservationOptions)
-                filterSection("Noise Level", group: .noise, options: noiseOptions)
-                filterSection("Space Type", group: .spaceType, options: spaceTypeOptions)
+                filterSection("Library", group: .library, options: viewModel.libraryOptions, collapsible: true)
+                filterSection("Reservation", group: .reservation, options: viewModel.reservationOptions)
+                filterSection("Noise Level", group: .noise, options: viewModel.noiseOptions)
+                filterSection("Space Type", group: .spaceType, options: viewModel.spaceTypeOptions)
             }
             .padding(.horizontal, 24)
             .padding(.top, 28)
@@ -264,7 +209,7 @@ struct HomeView: View {
         }
         .safeAreaInset(edge: .bottom) {
             Button { showFilters = false } label: {
-                Text("Show \(filtered.count) rooms")
+                Text("Show \(viewModel.filtered.count) rooms")
                     .font(.system(size: 18))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -291,8 +236,8 @@ struct HomeView: View {
 
             FlowLayout(spacing: 8) {
                 ForEach(visible, id: \.self) { option in
-                    let on = isOn(group, option.value)
-                    Button { toggle(group, option.value) } label: {
+                    let on = viewModel.isOn(group, option.value)
+                    Button { viewModel.toggle(group, option.value) } label: {
                         Text(option.count.map { "\(option.value) · \($0)" } ?? option.value)
                             .font(.system(size: 14))
                             .foregroundStyle(Constants.Colors.primaryText)
@@ -314,10 +259,6 @@ struct HomeView: View {
                 }
             }
         }
-    }
-
-    private func toggleFavorite(_ library: Library) {
-        if favorites.contains(library.id) { favorites.remove(library.id) } else { favorites.insert(library.id) }
     }
 }
 

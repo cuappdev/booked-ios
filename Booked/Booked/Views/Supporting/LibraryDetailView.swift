@@ -23,6 +23,22 @@ struct LibraryDetailView: View {
 
     private let heroHeight: CGFloat = 380
     private let sheetOverlap: CGFloat = 32
+    
+    private struct FeatureRow: View {
+        let icon: String
+        let text: String
+
+        var body: some View {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .frame(width: 24)
+                Text(text)
+                    .font(.system(size: 14))
+            }
+            .foregroundStyle(Constants.Colors.primaryText)
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -35,7 +51,7 @@ struct LibraryDetailView: View {
                         .offset(y: -sheetOverlap)
                         .padding(.bottom, -sheetOverlap)
                 }
-                .padding(.bottom, 110) // room for the Book Now button
+                .padding(.bottom, 110)
             }
             .ignoresSafeArea(edges: .top)
 
@@ -48,7 +64,6 @@ struct LibraryDetailView: View {
         }
     }
 
-    // MARK: Hero
     private var hero: some View {
         Constants.Colors.cardBorder.opacity(0.5)
             .frame(height: heroHeight)
@@ -93,8 +108,6 @@ struct LibraryDetailView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
-
-    // MARK: Content sheet
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -156,9 +169,7 @@ struct LibraryDetailView: View {
     }
 
     private var chips: [String] {
-        var items = [library.spaceInfo.library, library.spaceInfo.reservationType]
-        items.append(contentsOf: library.features.spaceFeatures)
-        return items.filter { !$0.isEmpty }
+        [library.spaceInfo.library, library.reservationLabel] + library.features.spaceFeatures
     }
 
     private var featuresSection: some View {
@@ -167,28 +178,17 @@ struct LibraryDetailView: View {
                 .font(.system(size: 18))
                 .foregroundStyle(Constants.Colors.libraryHeading)
 
-            ForEach(featureRows, id: \.text) { row in
-                HStack(spacing: 8) {
-                    Image(systemName: row.icon)
-                        .font(.system(size: 14))
-                        .frame(width: 24)
-                    Text(row.text)
-                        .font(.system(size: 14))
-                }
-                .foregroundStyle(Constants.Colors.primaryText)
+            ForEach(library.features.soundLevel, id: \.self) {
+                FeatureRow(icon: "speaker.wave.1", text: $0)
+            }
+            FeatureRow(icon: library.spaceTypeIcon, text: library.spaceInfo.category)
+            ForEach(library.features.spaceType, id: \.self) {
+                FeatureRow(icon: "person", text: $0)
+            }
+            ForEach(library.features.spaceFeatures, id: \.self) {
+                FeatureRow(icon: "display", text: $0)
             }
         }
-    }
-
-    private var featureRows: [(icon: String, text: String)] {
-        var rows: [(String, String)] = []
-        rows += library.features.soundLevel.map { ("speaker.wave.1", $0) }
-        rows.append((library.spaceTypeIcon, library.spaceInfo.category))
-        rows += library.features.spaceType.map { ("person", $0) }
-        rows += library.features.spaceFeatures.map { ("display", $0) }
-        // de-duplicate while keeping order
-        var seen = Set<String>()
-        return rows.filter { seen.insert($0.1).inserted }
     }
 
     private var locationSection: some View {
@@ -218,8 +218,6 @@ struct LibraryDetailView: View {
             .fill(Constants.Colors.cardBorder)
             .frame(height: 1)
     }
-
-    // MARK: Book button
 
     private var bookButton: some View {
         Button(action: onBook) {
