@@ -10,17 +10,6 @@ import SwiftUI
 // MARK: - Display helpers
 
 extension Library {
-    /// "Reservable" -> "Bookable", "No reservation" -> "Walk-in"
-    var reservationLabel: String {
-        switch spaceInfo.reservationType {
-        case "Reservable": return "Bookable"
-        case "No reservation": return "Walk-in"
-        default: return spaceInfo.reservationType
-        }
-    }
-
-    var isBookable: Bool { spaceInfo.reservationType == "Reservable" }
-
     var spaceTypeLabel: String { spaceInfo.category }
 
     var soundLevelLabel: String { features.soundLevel.first ?? "—" }
@@ -53,40 +42,7 @@ struct LibraryCardView: View {
                 heartButton
                     .padding(8)
             }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(library.title)
-                    .fontWeight(.semibold)
-                    .font(.system(size: 17))
-                    .foregroundStyle(Constants.Colors.bookedGreen)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                HStack(spacing: 4) {
-                    Text(library.spaceInfo.library)
-                        .foregroundStyle(Constants.Colors.secondaryText)
-                        .font(.system(size: 14))
-                        .lineLimit(1)
-                    Text("·")
-                        .foregroundStyle(Constants.Colors.secondaryText)
-                    Text(library.reservationLabel)
-                        .foregroundStyle(library.isBookable
-                                         ? Constants.Colors.bookableAccent
-                                         : Constants.Colors.secondaryText)
-                        .lineLimit(1)
-                }
-                .font(.system(size: 13))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    metaRow(icon: library.spaceTypeIcon, text: library.spaceTypeLabel)
-                    metaRow(icon: "speaker.wave.1", text: library.soundLevelLabel)
-                }
-                .padding(.top, 2)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            details
         }
         .background(Constants.Colors.cardSurface)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
@@ -99,6 +55,8 @@ struct LibraryCardView: View {
         .onTapGesture(perform: onTap)
         .accessibilityAddTraits(.isButton)
     }
+
+    // MARK: Image
 
     private var image: some View {
         Constants.Colors.cardBorder.opacity(0.5)
@@ -130,6 +88,54 @@ struct LibraryCardView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+    }
+
+    // MARK: Details
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            title
+            subtitle
+            metaRows
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var title: some View {
+        Text(library.title)
+            .fontWeight(.semibold)
+            .font(.system(size: 17))
+            .foregroundStyle(Constants.Colors.bookedGreen)
+            .lineLimit(1)
+            .truncationMode(.tail)
+    }
+
+    private var subtitle: some View {
+        HStack(spacing: 4) {
+            Text(library.spaceInfo.library)
+                .foregroundStyle(Constants.Colors.secondaryText)
+                .font(.system(size: 14))
+                .lineLimit(1)
+            Text("·")
+                .foregroundStyle(Constants.Colors.secondaryText)
+            Text(library.spaceInfo.reservationType.label)
+                .foregroundStyle(library.spaceInfo.reservationType.isBookable
+                                 ? Constants.Colors.bookableAccent
+                                 : Constants.Colors.secondaryText)
+                .lineLimit(1)
+        }
+        .font(.system(size: 13))
+    }
+
+    private var metaRows: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            metaRow(icon: library.spaceTypeIcon, text: library.spaceTypeLabel)
+            metaRow(icon: "speaker.wave.1", text: library.soundLevelLabel)
+        }
+        .padding(.top, 2)
     }
 
     private func metaRow(icon: String, text: String) -> some View {

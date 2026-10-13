@@ -40,7 +40,7 @@ struct HomeView: View {
         GridItem(.flexible(), spacing: 14),
         GridItem(.flexible(), spacing: 14)
     ]
-    
+
     private let tabBarClearance: CGFloat = 76
 
     private let collapsedLibraryCount = 6
@@ -53,13 +53,13 @@ struct HomeView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    
+
                     logo
-                    
+
                     searchBar
-                    
+
                     chipRow
-                    
+
                     VStack(alignment: .leading, spacing: 16) {
                         sectionHeader
                         LazyVGrid(columns: columns, spacing: 16) {
@@ -90,7 +90,7 @@ struct HomeView: View {
         .sheet(isPresented: $showFilters) {
             filterSheet
         }
-      
+
         .fullScreenCover(item: $selectedLibrary) { library in
             LibraryDetailView(
                 library: library,
@@ -101,8 +101,6 @@ struct HomeView: View {
             )
         }
     }
-
-    // MARK: Header
 
     private var logo: some View {
         Image("booked_logo_green")
@@ -141,11 +139,11 @@ struct HomeView: View {
     private var chipRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip("Available Now", selected: viewModel.availableNow, removable: false) {
+                ChipView(title: "Available Now", isSelected: viewModel.availableNow) {
                     viewModel.availableNow.toggle()
                 }
                 ForEach(viewModel.activeFilters, id: \.self) { f in
-                    chip(f.value, selected: true, removable: true) {
+                    ChipView(title: f.value, isSelected: true, isRemovable: true) {
                         viewModel.toggle(f.group, f.value)
                     }
                 }
@@ -153,20 +151,6 @@ struct HomeView: View {
             .padding(.horizontal, 20)
         }
         .padding(.vertical, 14)
-    }
-
-    private func chip(_ title: String, selected: Bool, removable: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title).font(.system(size: 14))
-                if removable { Image(systemName: "xmark").font(.system(size: 11, weight: .medium)) }
-            }
-            .foregroundStyle(Constants.Colors.primaryText)
-            .padding(.horizontal, 14)
-            .frame(height: 36)
-            .background(selected ? Constants.Colors.selectedChip : Constants.Colors.chip, in: Capsule())
-        }
-        .buttonStyle(.plain)
     }
 
     private var sectionHeader: some View {
@@ -182,8 +166,6 @@ struct HomeView: View {
             }
         }
     }
-
-    // MARK: Filter sheet (drag between half and full height)
 
     private var filterSheet: some View {
         ScrollView {
@@ -236,16 +218,12 @@ struct HomeView: View {
 
             FlowLayout(spacing: 8) {
                 ForEach(visible, id: \.self) { option in
-                    let on = viewModel.isOn(group, option.value)
-                    Button { viewModel.toggle(group, option.value) } label: {
-                        Text(option.count.map { "\(option.value) · \($0)" } ?? option.value)
-                            .font(.system(size: 14))
-                            .foregroundStyle(Constants.Colors.primaryText)
-                            .padding(.horizontal, 14)
-                            .frame(height: 36)
-                            .background(on ? Constants.Colors.selectedChip : Constants.Colors.chip, in: Capsule())
+                    ChipView(
+                        title: option.count.map { "\(option.value) · \($0)" } ?? option.value,
+                        isSelected: viewModel.isOn(group, option.value)
+                    ) {
+                        viewModel.toggle(group, option.value)
                     }
-                    .buttonStyle(.plain)
                 }
                 if collapsible && options.count > collapsedLibraryCount {
                     Button(showAllLibraries ? "See less" : "See more") {
@@ -262,35 +240,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Simple wrapping layout for chips
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
-        var x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0, maxW: CGFloat = 0
-        for v in subviews {
-            let s = v.sizeThatFits(.unspecified)
-            if x + s.width > width, x > 0 { x = 0; y += rowH + spacing; rowH = 0 }
-            x += s.width + spacing
-            rowH = max(rowH, s.height)
-            maxW = max(maxW, x - spacing)
-        }
-        return CGSize(width: maxW, height: y + rowH)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
-        for v in subviews {
-            let s = v.sizeThatFits(.unspecified)
-            if x + s.width > bounds.maxX, x > bounds.minX { x = bounds.minX; y += rowH + spacing; rowH = 0 }
-            v.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(s))
-            x += s.width + spacing
-            rowH = max(rowH, s.height)
-        }
-    }
-}
 
 #Preview {
     HomeView()

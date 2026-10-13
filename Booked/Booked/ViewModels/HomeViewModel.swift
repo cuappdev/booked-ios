@@ -22,7 +22,7 @@ final class HomeViewModel {
 
     // MARK: Static options
 
-    let reservationOptions = ["Bookable", "By request", "Walk-in"].map { FilterOption(value: $0, count: nil) }
+    let reservationOptions = ReservationType.allCases.map { FilterOption(value: $0.label, count: nil) }
     let noiseOptions = ["Silent", "Quiet", "Collaborative"].map { FilterOption(value: $0, count: nil) }
 
     init(libraries: [Library] = Library.sampleData) {
@@ -54,13 +54,13 @@ final class HomeViewModel {
     }
 
     private func matches(_ lib: Library) -> Bool {
-        if availableNow && lib.spaceInfo.reservationType == "By request" { return false }
+        if availableNow && lib.spaceInfo.reservationType == .byRequest { return false }
 
         let libs = selected(.library)
         if !libs.isEmpty && !libs.contains(lib.spaceInfo.library) { return false }
 
         let res = selected(.reservation)
-        if !res.isEmpty && !res.contains(lib.reservationLabel) { return false }
+        if !res.isEmpty && !res.contains(lib.spaceInfo.reservationType.label) { return false }
 
         let noise = selected(.noise)
         if !noise.isEmpty && noise.isDisjoint(with: lib.features.soundLevel) { return false }

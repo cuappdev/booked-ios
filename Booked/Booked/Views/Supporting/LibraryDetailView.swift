@@ -8,9 +8,14 @@
 import SwiftUI
 
 /// Open/closed info isn't part of `Library` yet, so it's passed in separately.
-struct LibraryAvailability: Equatable {
-    var isOpen: Bool
-    var detail: String   // e.g. "Opens 6pm Tues"
+enum LibraryAvailability: Equatable {
+    case open(closesAt: Date)
+    case closed(opensAt: Date)
+
+    var isOpen: Bool {
+        if case .open = self { return true }
+        return false
+    }
 }
 
 struct LibraryDetailView: View {
@@ -21,9 +26,6 @@ struct LibraryDetailView: View {
     var onBack: () -> Void = {}
     var onBook: () -> Void = {}
 
-    private let heroHeight: CGFloat = 380
-    private let sheetOverlap: CGFloat = 32
-    
     private struct FeatureRow: View {
         let icon: String
         let text: String
@@ -46,10 +48,13 @@ struct LibraryDetailView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
+                    
                     hero
+                    
                     content
-                        .offset(y: -sheetOverlap)
-                        .padding(.bottom, -sheetOverlap)
+                    
+                        .offset(y: -Constants.Spacing.sheetOverlap)
+                        .padding(.bottom, -Constants.Spacing.sheetOverlap)
                 }
                 .padding(.bottom, 110)
             }
@@ -58,15 +63,13 @@ struct LibraryDetailView: View {
             topButtons
                 .frame(maxHeight: .infinity, alignment: .top)
 
-            if library.spaceInfo.reservationType != "No reservation" {
-                bookButton
-            }
+            if library.spaceInfo.reservationType != .walkIn { bookButton }
         }
     }
 
     private var hero: some View {
         Constants.Colors.cardBorder.opacity(0.5)
-            .frame(height: heroHeight)
+            .frame(height: Constants.Spacing.heroHeight)
             .overlay {
                 AsyncImage(url: library.displayImageURL) { phase in
                     switch phase {
@@ -111,6 +114,7 @@ struct LibraryDetailView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
+            
             header
                 .padding(.top, 32)
                 .padding(.bottom, 20)
@@ -147,10 +151,7 @@ struct LibraryDetailView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if let availability {
-                (Text(availability.isOpen ? "Open" : "Closed")
-                    .foregroundColor(availability.isOpen ? Constants.Colors.bookableAccent : Constants.Colors.closedRed)
-                 + Text(" · \(availability.detail)")
-                    .foregroundColor(Constants.Colors.secondaryText))
+                availabilityText(availability)
                     .font(.system(size: 14))
             }
 
@@ -168,8 +169,21 @@ struct LibraryDetailView: View {
         }
     }
 
+    private func availabilityText(_ availability: LibraryAvailability) -> Text {
+        let (status, color, detail): (String, Color, String) = switch availability {
+        case .open(let closesAt):
+            ("Open", Constants.Colors.bookableAccent,
+             "Closes \(closesAt.formatted(.dateTime.hour().minute()))")
+        case .closed(let opensAt):
+            ("Closed", Constants.Colors.closedRed,
+             "Opens \(opensAt.formatted(.dateTime.weekday(.abbreviated).hour().minute()))")
+        }
+        return Text(status).foregroundColor(color)
+             + Text(" · \(detail)").foregroundColor(Constants.Colors.secondaryText)
+    }
+
     private var chips: [String] {
-        [library.spaceInfo.library, library.reservationLabel] + library.features.spaceFeatures
+        [library.spaceInfo.library, library.spaceInfo.reservationType.label] + library.features.spaceFeatures
     }
 
     private var featuresSection: some View {
@@ -221,7 +235,7 @@ struct LibraryDetailView: View {
 
     private var bookButton: some View {
         Button(action: onBook) {
-            Text(library.spaceInfo.reservationType == "Reservable" ? "Book Now" : "Request Room")
+            Text(library.spaceInfo.reservationType.isBookable ? "Book Now" : "Request Room")
                 .font(.system(size: 18))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -238,6 +252,6 @@ struct LibraryDetailView: View {
 #Preview {
     LibraryDetailView(
         library: Library.sampleData[0],
-        availability: .init(isOpen: false, detail: "Opens 6pm Tues")
+        availability: .closed(opensAt: Calendar.current.date(byAdding: .hour, value: 5, to: .now)!)
     )
 }

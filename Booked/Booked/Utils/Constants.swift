@@ -39,6 +39,12 @@ struct Constants {
         static let closedRed = Color(hex: "#a94a48")
         
     }
+    
+    enum Spacing {
+        //LibraryDetailView
+        static let heroHeight: CGFloat = 380
+        static let sheetOverlap: CGFloat = 32
+    }
 }
 
 extension Color {
