@@ -13,7 +13,7 @@ struct Library: Identifiable, Equatable, Hashable {
         var name: String
         var description: String
         var category: String
-        var reservationType: String
+        var reservationType: ReservationType
         var spaceId: String
     }
 
@@ -54,7 +54,7 @@ extension Library {
                 name: "Olin 120B",
                 description: "Group study room. Seats 4. Only available after 6pm M-F. Available all day on weekends.",
                 category: "Collaborative Space",
-                reservationType: "Reservable",
+                reservationType: .reservable,
                 spaceId: "183114"
             ),
             features: .init(
@@ -74,7 +74,7 @@ extension Library {
                 name: "Olin 120A Group Study",
                 description: "Group study room. Seats 4. Only available after 6pm M-F. Available all day on weekends.",
                 category: "Collaborative Space",
-                reservationType: "Reservable",
+                reservationType: .reservable,
                 spaceId: "183113"
             ),
             features: .init(
@@ -94,7 +94,7 @@ extension Library {
                 name: "2nd Floor",
                 description: "Room 282",
                 category: "Interfaith Serenity Room",
-                reservationType: "By request",
+                reservationType: .byRequest,
                 spaceId: ""
             ),
             features: .init(
@@ -114,7 +114,7 @@ extension Library {
                 name: "Cho Room",
                 description: "Kroch B59",
                 category: "Conference Room",
-                reservationType: "By request",
+                reservationType: .byRequest,
                 spaceId: ""
             ),
             features: .init(
@@ -134,7 +134,7 @@ extension Library {
                 name: "Rawson Reading Room",
                 description: "Kroch B60",
                 category: "Open Study",
-                reservationType: "No reservation",
+                reservationType: .walkIn,
                 spaceId: ""
             ),
             features: .init(
@@ -154,7 +154,7 @@ extension Library {
                 name: "1st Floor",
                 description: "Severinghaus Asia Reading Room",
                 category: "Open Study",
-                reservationType: "No reservation",
+                reservationType: .walkIn,
                 spaceId: ""
             ),
             features: .init(
@@ -174,7 +174,7 @@ extension Library {
                 name: "Level 4B",
                 description: "Uris 4B04 Cocktail Lounge Study Room. This room is located in the Cocktail Lounge of Uris Library. A dry erase board is available for use; markers are available to be checked-out at the Olin Circulation Desk during open hours.",
                 category: "Group Study",
-                reservationType: "Reservable",
+                reservationType: .reservable,
                 spaceId: "5649"
             ),
             features: .init(
@@ -194,7 +194,7 @@ extension Library {
                 name: "Level 4B",
                 description: "Uris 4B03 Cocktail Lounge Study Room. This room is located in the Cocktail Lounge of Uris Library. A dry erase board is available for use; markers are available to be checked-out at the Olin Circulation Desk during open hours.",
                 category: "Group Study",
-                reservationType: "Reservable",
+                reservationType: .reservable,
                 spaceId: "5648"
             ),
             features: .init(
@@ -214,7 +214,7 @@ extension Library {
                 name: "Level 4B",
                 description: "Uris 4B02 Cocktail Lounge Study Room. This room is located in the Cocktail Lounge of Uris Library. A dry erase board is available for use; markers are available to be checked-out at the Olin Circulation Desk during open hours.",
                 category: "Group Study",
-                reservationType: "Reservable",
+                reservationType: .reservable,
                 spaceId: "5647"
             ),
             features: .init(
@@ -234,7 +234,7 @@ extension Library {
                 name: "Level 4B",
                 description: "Cocktail Lounge",
                 category: "Open Study",
-                reservationType: "No reservation",
+                reservationType: .walkIn,
                 spaceId: ""
             ),
             features: .init(

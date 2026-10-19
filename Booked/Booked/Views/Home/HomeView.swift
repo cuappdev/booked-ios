@@ -7,11 +7,239 @@
 
 import SwiftUI
 
+
+// MARK: - Filters
+
+enum FilterGroup: Hashable {
+    case library, reservation, noise, spaceType
+}
+
+struct ActiveFilter: Hashable {
+    let group: FilterGroup
+    let value: String
+}
+
+struct FilterOption: Hashable {
+    let value: String
+    let count: Int?
+}
+
 struct HomeView: View {
+    @State private var viewModel: HomeViewModel
+
+    // View-only state
+    @State private var showFilters = false
+    @State private var showAllLibraries = false
+    @State private var selectedLibrary: Library?
+
+    init(libraries: [Library] = Library.sampleData) {
+        _viewModel = State(initialValue: HomeViewModel(libraries: libraries))
+    }
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14)
+    ]
+
+    private let tabBarClearance: CGFloat = 76
+
+    private let collapsedLibraryCount = 6
+
+    // MARK: Body
+
     var body: some View {
-        Text("Home View")
+        ZStack {
+            Constants.Colors.creamBg.ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 0) {
+
+                    logo
+
+                    searchBar
+
+                    chipRow
+
+                    VStack(alignment: .leading, spacing: 16) {
+                        sectionHeader
+                        LazyVGrid(columns: columns, spacing: 16) {
+                            ForEach(viewModel.filtered) { library in
+                                LibraryCardView(
+                                    library: library,
+                                    isFavorite: viewModel.isFavorite(library),
+                                    onToggleFavorite: { viewModel.toggleFavorite(library) },
+                                    onTap: { selectedLibrary = library }
+                                )
+                            }
+                        }
+                        if viewModel.filtered.isEmpty {
+                            Text("No rooms match your search.")
+                                .font(.subheadline)
+                                .foregroundStyle(Constants.Colors.secondaryText)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 40)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 14)
+                    .padding(.bottom, tabBarClearance)
+                }
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .sheet(isPresented: $showFilters) {
+            filterSheet
+        }
+
+        .fullScreenCover(item: $selectedLibrary) { library in
+            LibraryDetailView(
+                library: library,
+                isFavorite: viewModel.isFavorite(library),
+                onToggleFavorite: { viewModel.toggleFavorite(library) },
+                onBack: { selectedLibrary = nil },
+                onBook: { /* TODO: start booking flow */ }
+            )
+        }
+    }
+
+    private var logo: some View {
+        Image("booked_logo_green")
+            .resizable()
+            .frame(width: 28.2, height: 28.2)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Constants.Colors.secondaryText)
+                TextField("Where to book?", text: $viewModel.searchText)
+                    .font(.system(size: 18))
+                    .foregroundStyle(Constants.Colors.primaryText)
+                    .submitLabel(.search)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 52)
+            .background(Constants.Colors.cardSurface, in: Capsule())
+            .overlay(Capsule().stroke(Constants.Colors.cardBorder, lineWidth: 1.5))
+
+            Button { showFilters = true } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Constants.Colors.bookedGreen)
+            }
+            .accessibilityLabel("Filters")
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private var chipRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ChipView(title: "Available Now", isSelected: viewModel.availableNow) {
+                    viewModel.availableNow.toggle()
+                }
+                ForEach(viewModel.activeFilters, id: \.self) { f in
+                    ChipView(title: f.value, isSelected: true, isRemovable: true) {
+                        viewModel.toggle(f.group, f.value)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+        .padding(.vertical, 14)
+    }
+
+    private var sectionHeader: some View {
+        HStack {
+            Text(viewModel.hasActiveFilters ? "\(viewModel.filtered.count) rooms" : "Available now")
+                .font(.system(size: 22))
+                .foregroundStyle(Constants.Colors.primaryText)
+            Spacer()
+            if viewModel.hasActiveFilters {
+                Button("Clear all") { viewModel.clearAll() }
+                    .font(.system(size: 14))
+                    .foregroundStyle(Constants.Colors.secondaryText)
+            }
+        }
+    }
+
+    private var filterSheet: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    Text("Filters")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Constants.Colors.primaryText)
+                    Spacer()
+                    Button("Clear all") { viewModel.clearFilters() }
+                        .font(.system(size: 14))
+                        .foregroundStyle(Constants.Colors.secondaryText)
+                }
+
+                filterSection("Library", group: .library, options: viewModel.libraryOptions, collapsible: true)
+                filterSection("Reservation", group: .reservation, options: viewModel.reservationOptions)
+                filterSection("Noise Level", group: .noise, options: viewModel.noiseOptions)
+                filterSection("Space Type", group: .spaceType, options: viewModel.spaceTypeOptions)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 28)
+            .padding(.bottom, 16)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Button { showFilters = false } label: {
+                Text("Show \(viewModel.filtered.count) rooms")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Constants.Colors.bookedGreen, in: Capsule())
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(32)
+        .presentationBackground(Constants.Colors.cardSurface)
+    }
+
+    private func filterSection(_ title: String, group: FilterGroup, options: [FilterOption], collapsible: Bool = false) -> some View {
+        let visible = (collapsible && !showAllLibraries) ? Array(options.prefix(collapsedLibraryCount)) : options
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.system(size: 18))
+                .foregroundStyle(Constants.Colors.primaryText)
+
+            FlowLayout(spacing: 8) {
+                ForEach(visible, id: \.self) { option in
+                    ChipView(
+                        title: option.count.map { "\(option.value) · \($0)" } ?? option.value,
+                        isSelected: viewModel.isOn(group, option.value)
+                    ) {
+                        viewModel.toggle(group, option.value)
+                    }
+                }
+                if collapsible && options.count > collapsedLibraryCount {
+                    Button(showAllLibraries ? "See less" : "See more") {
+                        withAnimation { showAllLibraries.toggle() }
+                    }
+                    .font(.system(size: 14))
+                    .underline()
+                    .foregroundStyle(Constants.Colors.primaryText)
+                    .padding(.horizontal, 8)
+                    .frame(height: 36)
+                }
+            }
+        }
     }
 }
+
 
 #Preview {
     HomeView()

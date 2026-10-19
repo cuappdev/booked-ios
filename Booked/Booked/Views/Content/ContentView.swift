@@ -37,7 +37,7 @@ struct CustomTabBar: View {
     @Binding var selectedTab: Screen
     @Namespace private var underlineNamespace
 
-    private let barHeight: CGFloat = 77
+    private let barHeight: CGFloat = 60
 
     var body: some View {
         HStack(spacing: 60) {
@@ -45,6 +45,7 @@ struct CustomTabBar: View {
                 tabButton(for: tab)
             }
         }
+        .offset(y: 14)
         .frame(height: barHeight)
         .frame(maxWidth: .infinity)
         .background(
