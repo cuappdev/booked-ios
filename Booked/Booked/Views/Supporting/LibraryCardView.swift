@@ -132,17 +132,19 @@ struct LibraryCardView: View {
 
     private var metaRows: some View {
         VStack(alignment: .leading, spacing: 3) {
-            metaRow(icon: library.spaceTypeIcon, text: library.spaceTypeLabel)
-            metaRow(icon: "speaker.wave.1", text: library.soundLevelLabel)
+            metaRow(icon: "sofa_icon", text: library.spaceTypeLabel)
+            metaRow(icon: "full_volume_icon", text: library.soundLevelLabel)
         }
         .padding(.top, 2)
     }
 
     private func metaRow(icon: String, text: String) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-                .frame(width: 14)
+            Image(icon)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 14, height: 14)
             Text(text)
                 .font(.system(size: 12))
                 .lineLimit(1)

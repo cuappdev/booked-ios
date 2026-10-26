@@ -32,8 +32,11 @@ struct LibraryDetailView: View {
 
         var body: some View {
             HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14))
+                Image(icon)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 16, height: 16)
                     .frame(width: 24)
                 Text(text)
                     .font(.system(size: 14))
@@ -193,15 +196,23 @@ struct LibraryDetailView: View {
                 .foregroundStyle(Constants.Colors.libraryHeading)
 
             ForEach(library.features.soundLevel, id: \.self) {
-                FeatureRow(icon: "speaker.wave.1", text: $0)
+                FeatureRow(icon: soundIcon(for: $0), text: $0)
             }
-            FeatureRow(icon: library.spaceTypeIcon, text: library.spaceInfo.category)
+            FeatureRow(icon: "sofa_icon", text: library.spaceInfo.category)
             ForEach(library.features.spaceType, id: \.self) {
-                FeatureRow(icon: "person", text: $0)
+                FeatureRow(icon: "person_icon", text: $0)
             }
             ForEach(library.features.spaceFeatures, id: \.self) {
-                FeatureRow(icon: "display", text: $0)
+                FeatureRow(icon: "monitor_icon", text: $0)
             }
+        }
+    }
+
+    private func soundIcon(for level: String) -> String {
+        switch level {
+        case "Silent": "silent_icon"
+        case "Quiet": "quiet_icon"
+        default: "full_volume_icon"
         }
     }
 
