@@ -14,15 +14,15 @@ extension Library {
 
     var soundLevelLabel: String { features.soundLevel.first ?? "—" }
 
-    var spaceTypeIcon: String {
-        switch spaceInfo.category {
-        case "Group Study", "Collaborative Space": return "person.3"
-        case "Open Study": return "books.vertical"
-        case "Conference Room": return "rectangle.3.group"
-        case "Interfaith Serenity Room": return "leaf"
-        default: return "chair.lounge"
-        }
-    }
+    // MARK: Icons (asset catalog names)
+
+    var spaceTypeIcon: String { "sofa_icon" }
+
+    var soundLevelIcon: String { "full_volume_icon" }
+
+    var collaborativeIcon: String { "person_icon" }
+
+    var featureIcon: String { "sofa_icon" }
 }
 
 // MARK: - Card
@@ -133,16 +133,18 @@ struct LibraryCardView: View {
     private var metaRows: some View {
         VStack(alignment: .leading, spacing: 3) {
             metaRow(icon: library.spaceTypeIcon, text: library.spaceTypeLabel)
-            metaRow(icon: "speaker.wave.1", text: library.soundLevelLabel)
+            metaRow(icon: library.soundLevelIcon, text: library.soundLevelLabel)
         }
         .padding(.top, 2)
     }
 
     private func metaRow(icon: String, text: String) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-                .frame(width: 14)
+            Image(icon)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 14, height: 14)
             Text(text)
                 .font(.system(size: 12))
                 .lineLimit(1)

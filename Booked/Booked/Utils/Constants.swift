@@ -8,14 +8,6 @@
 import SwiftUI
 
 // MARK: - Constants
-//
-//  Constants.swift
-//  Booked
-//
-
-import SwiftUI
-
-// MARK: - Constants
 struct Constants {
     enum Colors {
         // Palette

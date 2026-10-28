@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - Filters
 
 enum FilterGroup: Hashable {
-    case library, reservation, noise, spaceType
+    case library, reservation, noise, spaceType, feature
 }
 
 struct ActiveFilter: Hashable {
@@ -27,9 +27,8 @@ struct FilterOption: Hashable {
 struct HomeView: View {
     @State private var viewModel: HomeViewModel
 
-    // View-only state
     @State private var showFilters = false
-    @State private var showAllLibraries = false
+    @State private var expandedGroups: Set<FilterGroup> = []
     @State private var selectedLibrary: Library?
 
     init(libraries: [Library] = Library.sampleData) {
@@ -42,8 +41,6 @@ struct HomeView: View {
     ]
 
     private let tabBarClearance: CGFloat = 76
-
-    private let collapsedLibraryCount = 6
 
     // MARK: Body
 
@@ -139,8 +136,11 @@ struct HomeView: View {
     private var chipRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                ChipView(title: "All", isSelected: !viewModel.availableNow) {
+                    viewModel.availableNow = false
+                }
                 ChipView(title: "Available Now", isSelected: viewModel.availableNow) {
-                    viewModel.availableNow.toggle()
+                    viewModel.availableNow = true
                 }
                 ForEach(viewModel.activeFilters, id: \.self) { f in
                     ChipView(title: f.value, isSelected: true, isRemovable: true) {
@@ -180,10 +180,11 @@ struct HomeView: View {
                         .foregroundStyle(Constants.Colors.secondaryText)
                 }
 
-                filterSection("Library", group: .library, options: viewModel.libraryOptions, collapsible: true)
+                filterSection("Library", group: .library, options: viewModel.libraryOptions, collapsedCount: 6)
                 filterSection("Reservation", group: .reservation, options: viewModel.reservationOptions)
                 filterSection("Noise Level", group: .noise, options: viewModel.noiseOptions)
-                filterSection("Space Type", group: .spaceType, options: viewModel.spaceTypeOptions)
+                filterSection("Space Type", group: .spaceType, options: viewModel.spaceTypeOptions, collapsedCount: 9)
+                filterSection("Features", group: .feature, options: viewModel.featureOptions, collapsedCount: 10)
             }
             .padding(.horizontal, 24)
             .padding(.top, 28)
@@ -209,8 +210,11 @@ struct HomeView: View {
         .presentationBackground(Constants.Colors.cardSurface)
     }
 
-    private func filterSection(_ title: String, group: FilterGroup, options: [FilterOption], collapsible: Bool = false) -> some View {
-        let visible = (collapsible && !showAllLibraries) ? Array(options.prefix(collapsedLibraryCount)) : options
+    private func filterSection(_ title: String, group: FilterGroup, options: [FilterOption], collapsedCount: Int? = nil) -> some View {
+        let isExpanded = expandedGroups.contains(group)
+        let canCollapse = collapsedCount.map { options.count > $0 } ?? false
+        let visible = canCollapse && !isExpanded ? Array(options.prefix(collapsedCount ?? options.count)) : options
+
         return VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 18))
@@ -225,9 +229,11 @@ struct HomeView: View {
                         viewModel.toggle(group, option.value)
                     }
                 }
-                if collapsible && options.count > collapsedLibraryCount {
-                    Button(showAllLibraries ? "See less" : "See more") {
-                        withAnimation { showAllLibraries.toggle() }
+                if canCollapse {
+                    Button(isExpanded ? "See less" : "See more") {
+                        withAnimation {
+                            if !expandedGroups.insert(group).inserted { expandedGroups.remove(group) }
+                        }
                     }
                     .font(.system(size: 14))
                     .underline()

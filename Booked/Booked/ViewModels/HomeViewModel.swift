@@ -47,6 +47,10 @@ final class HomeViewModel {
         counted(libraries.map { $0.spaceInfo.category })
     }
 
+    var featureOptions: [FilterOption] {
+        counted(libraries.flatMap { $0.features.spaceFeatures }, showCount: false)
+    }
+
     // MARK: Filtering
 
     private func selected(_ group: FilterGroup) -> Set<String> {
@@ -68,6 +72,9 @@ final class HomeViewModel {
         let types = selected(.spaceType)
         if !types.isEmpty && !types.contains(lib.spaceInfo.category) { return false }
 
+        let features = selected(.feature)
+        if !features.isEmpty && !features.isSubset(of: lib.features.spaceFeatures) { return false }
+
         let q = searchText.trimmingCharacters(in: .whitespaces)
         if !q.isEmpty {
             let hay = "\(lib.title) \(lib.spaceInfo.library) \(lib.spaceInfo.category)"
@@ -76,10 +83,10 @@ final class HomeViewModel {
         return true
     }
 
-    private func counted(_ values: [String]) -> [FilterOption] {
+    private func counted(_ values: [String], showCount: Bool = true) -> [FilterOption] {
         Dictionary(grouping: values, by: { $0 })
-            .map { FilterOption(value: $0.key, count: $0.value.count) }
-            .sorted { ($0.count ?? 0, $1.value) > ($1.count ?? 0, $0.value) }
+            .sorted { ($0.value.count, $1.key) > ($1.value.count, $0.key) }
+            .map { FilterOption(value: $0.key, count: showCount ? $0.value.count : nil) }
     }
 
     // MARK: Actions
