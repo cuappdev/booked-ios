@@ -47,7 +47,6 @@ final class HomeViewModel {
         counted(libraries.map { $0.spaceInfo.category })
     }
 
-    /// Features are shown without counts, most common first.
     var featureOptions: [FilterOption] {
         counted(libraries.flatMap { $0.features.spaceFeatures }, showCount: false)
     }
@@ -73,7 +72,6 @@ final class HomeViewModel {
         let types = selected(.spaceType)
         if !types.isEmpty && !types.contains(lib.spaceInfo.category) { return false }
 
-        // A room must have every selected feature (unlike the other groups, which match any)
         let features = selected(.feature)
         if !features.isEmpty && !features.isSubset(of: lib.features.spaceFeatures) { return false }
 

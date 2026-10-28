@@ -27,7 +27,6 @@ struct FilterOption: Hashable {
 struct HomeView: View {
     @State private var viewModel: HomeViewModel
 
-    // View-only state
     @State private var showFilters = false
     @State private var expandedGroups: Set<FilterGroup> = []
     @State private var selectedLibrary: Library?
@@ -211,7 +210,6 @@ struct HomeView: View {
         .presentationBackground(Constants.Colors.cardSurface)
     }
 
-    /// `collapsedCount`: show only this many chips behind a "See more" button.
     private func filterSection(_ title: String, group: FilterGroup, options: [FilterOption], collapsedCount: Int? = nil) -> some View {
         let isExpanded = expandedGroups.contains(group)
         let canCollapse = collapsedCount.map { options.count > $0 } ?? false

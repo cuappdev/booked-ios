@@ -14,15 +14,15 @@ extension Library {
 
     var soundLevelLabel: String { features.soundLevel.first ?? "—" }
 
-    var spaceTypeIcon: String {
-        switch spaceInfo.category {
-        case "Group Study", "Collaborative Space": return "person.3"
-        case "Open Study": return "books.vertical"
-        case "Conference Room": return "rectangle.3.group"
-        case "Interfaith Serenity Room": return "leaf"
-        default: return "chair.lounge"
-        }
-    }
+    // MARK: Icons (asset catalog names)
+
+    var spaceTypeIcon: String { "sofa_icon" }
+
+    var soundLevelIcon: String { "full_volume_icon" }
+
+    var collaborativeIcon: String { "person_icon" }
+
+    var featureIcon: String { "sofa_icon" }
 }
 
 // MARK: - Card
@@ -132,8 +132,8 @@ struct LibraryCardView: View {
 
     private var metaRows: some View {
         VStack(alignment: .leading, spacing: 3) {
-            metaRow(icon: "sofa_icon", text: library.spaceTypeLabel)
-            metaRow(icon: "full_volume_icon", text: library.soundLevelLabel)
+            metaRow(icon: library.spaceTypeIcon, text: library.spaceTypeLabel)
+            metaRow(icon: library.soundLevelIcon, text: library.soundLevelLabel)
         }
         .padding(.top, 2)
     }
