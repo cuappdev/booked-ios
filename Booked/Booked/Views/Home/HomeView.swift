@@ -31,8 +31,8 @@ struct HomeView: View {
     @State private var expandedGroups: Set<FilterGroup> = []
     @State private var selectedLibrary: Library?
 
-    init(libraries: [Library] = Library.sampleData) {
-        _viewModel = State(initialValue: HomeViewModel(libraries: libraries))
+    init(libraries: [Library] = Library.sampleData, favorites: FavoritesStore = FavoritesStore()) {
+        _viewModel = State(initialValue: HomeViewModel(libraries: libraries, favorites: favorites))
     }
 
     private let columns = [
