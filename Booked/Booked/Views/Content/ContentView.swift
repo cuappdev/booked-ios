@@ -10,23 +10,40 @@ import SwiftUI
 struct ContentView: View {
     
     @State private var selectedTab: Screen = .home
+    @State private var favorites = FavoritesStore()
+    @State private var showLogoutConfirmation = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
                 switch selectedTab {
                 case .home:
-                    HomeView()
+                    HomeView(favorites: favorites)
                 case .map:
                     MapView()
                 case .profile:
-                    ProfileView()
+                    ProfileView(
+                        favorites: favorites,
+                        onRequestLogOut: { showLogoutConfirmation = true }
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             CustomTabBar(selectedTab: $selectedTab)
+
+            if showLogoutConfirmation {
+                LogoutConfirmationView(
+                    onCancel: { showLogoutConfirmation = false },
+                    onConfirm: {
+                        showLogoutConfirmation = false
+                        // TODO: clear session and return to LoginView
+                    }
+                )
+                .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: showLogoutConfirmation)
         .background(Constants.Colors.creamBg.ignoresSafeArea())
     }
 }
