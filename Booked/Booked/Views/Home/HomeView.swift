@@ -30,9 +30,10 @@ struct HomeView: View {
     @State private var showFilters = false
     @State private var expandedGroups: Set<FilterGroup> = []
     @State private var selectedLibrary: Library?
+    @State private var showSearch = false
 
-    init(libraries: [Library] = Library.sampleData) {
-        _viewModel = State(initialValue: HomeViewModel(libraries: libraries))
+    init(libraries: [Library] = Library.sampleData, favorites: FavoritesStore = FavoritesStore()) {
+        _viewModel = State(initialValue: HomeViewModel(libraries: libraries, favorites: favorites))
     }
 
     private let columns = [
@@ -109,19 +110,28 @@ struct HomeView: View {
 
     private var searchBar: some View {
         HStack(spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18))
-                    .foregroundStyle(Constants.Colors.secondaryText)
-                TextField("Where to book?", text: $viewModel.searchText)
-                    .font(.system(size: 18))
-                    .foregroundStyle(Constants.Colors.primaryText)
-                    .submitLabel(.search)
+            Button { showSearch = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Constants.Colors.secondaryText)
+                    Text(viewModel.searchText.isEmpty ? "Where to book?" : viewModel.searchText)
+                        .font(.system(size: 18))
+                        .foregroundStyle(viewModel.searchText.isEmpty
+                                         ? Constants.Colors.tertiaryText
+                                         : Constants.Colors.primaryText)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 16)
+                .frame(height: 52)
+                .background(Constants.Colors.creamBg, in: Capsule())
+                .overlay(Capsule().stroke(Constants.Colors.cardBorder, lineWidth: 1.5))
+                .contentShape(Capsule())
             }
-            .padding(.horizontal, 16)
-            .frame(height: 52)
-            .background(Constants.Colors.cardSurface, in: Capsule())
-            .overlay(Capsule().stroke(Constants.Colors.cardBorder, lineWidth: 1.5))
+            .buttonStyle(.plain)
+            .accessibilityLabel("Search")
+            .accessibilityHint("Opens search")
 
             Button { showFilters = true } label: {
                 Image(systemName: "slider.horizontal.3")
@@ -131,6 +141,17 @@ struct HomeView: View {
             .accessibilityLabel("Filters")
         }
         .padding(.horizontal, 20)
+        .fullScreenCover(isPresented: $showSearch) {
+            SearchView(
+                initialQuery: viewModel.searchText,
+                libraries: viewModel.libraries,
+                onSearch: { term in
+                    viewModel.searchText = term
+                    showSearch = false
+                },
+                onClose: { showSearch = false }
+            )
+        }
     }
 
     private var chipRow: some View {

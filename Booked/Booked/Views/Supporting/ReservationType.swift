@@ -23,4 +23,6 @@ enum ReservationType: String, Codable, CaseIterable {
     }
 
     var isBookable: Bool { self == .reservable }
+
+    var isAvailableNow: Bool { self != .byRequest }
 }

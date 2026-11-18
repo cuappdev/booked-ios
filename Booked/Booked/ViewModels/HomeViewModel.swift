@@ -18,15 +18,16 @@ final class HomeViewModel {
     var searchText = ""
     var availableNow = true
     var activeFilters: [ActiveFilter] = []
-    var favorites: Set<Int> = []
+    let favorites: FavoritesStore
 
     // MARK: Static options
 
     let reservationOptions = ReservationType.allCases.map { FilterOption(value: $0.label, count: nil) }
     let noiseOptions = ["Silent", "Quiet", "Collaborative"].map { FilterOption(value: $0, count: nil) }
 
-    init(libraries: [Library] = Library.sampleData) {
+    init(libraries: [Library] = Library.sampleData, favorites: FavoritesStore = FavoritesStore()) {
         self.libraries = libraries
+        self.favorites = favorites
     }
 
     // MARK: Derived state
@@ -58,7 +59,7 @@ final class HomeViewModel {
     }
 
     private func matches(_ lib: Library) -> Bool {
-        if availableNow && lib.spaceInfo.reservationType == .byRequest { return false }
+        if availableNow && !lib.spaceInfo.reservationType.isAvailableNow { return false }
 
         let libs = selected(.library)
         if !libs.isEmpty && !libs.contains(lib.spaceInfo.library) { return false }
@@ -114,14 +115,10 @@ final class HomeViewModel {
     }
 
     func toggleFavorite(_ library: Library) {
-        if favorites.contains(library.id) {
-            favorites.remove(library.id)
-        } else {
-            favorites.insert(library.id)
-        }
+        favorites.toggle(library)
     }
 
     func isFavorite(_ library: Library) -> Bool {
-        favorites.contains(library.id)
+        favorites.contains(library)
     }
 }

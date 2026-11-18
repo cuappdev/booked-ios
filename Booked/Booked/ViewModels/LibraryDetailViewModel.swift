@@ -72,7 +72,7 @@ final class LibraryDetailViewModel {
     }
 
     var favoriteTint: Color {
-        isFavorite ? .red : Constants.Colors.primaryText
+        isFavorite ? Constants.Colors.hearted : Constants.Colors.primaryText
     }
 
     var availabilityText: Text? {

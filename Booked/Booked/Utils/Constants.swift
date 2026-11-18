@@ -30,6 +30,9 @@ struct Constants {
         static let bookableAccent = Color(hex: "#5da271")
         static let closedRed = Color(hex: "#a94a48")
         
+        //Heart
+        static let hearted = Color(hex: "#E66C6C")
+        
     }
     
     enum Spacing {
