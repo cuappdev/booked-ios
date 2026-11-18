@@ -21,7 +21,7 @@ final class FavoritesStore {
 
     init(ids: [Int]? = nil, defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        self.ids = ids ?? (defaults.array(forKey: "favoriteLibraryIDs") as? [Int] ?? [])
+        self.ids = ids ?? (defaults.array(forKey: storageKey) as? [Int] ?? [])
     }
 
     var recentlyAddedFirst: [Int] {

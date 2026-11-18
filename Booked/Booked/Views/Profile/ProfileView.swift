@@ -93,18 +93,20 @@ struct ProfileView: View {
         if !bookings.isEmpty {
             VStack(spacing: 14) {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
                         ForEach(bookings) { library in
                             RecentBookingCard(
                                 library: library,
                                 onBook: { /* TODO: start booking flow */ }
                             )
                             .containerRelativeFrame(.horizontal) { width, _ in
-                                bookings.count > 1 ? width - 64 : width - 40
+                                bookings.count > 1 ? width - 20 : width
                             }
+                            .frame(maxHeight: .infinity)
                         }
                     }
                     .scrollTargetLayout()
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 .contentMargins(.horizontal, 20, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned)
@@ -120,13 +122,11 @@ struct ProfileView: View {
     }
 
     private func pageIndicator(count: Int, current: Int) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 22) {
             ForEach(0..<count, id: \.self) { index in
                 Capsule()
-                    .fill(index == current
-                          ? Constants.Colors.bookedGreen
-                          : Constants.Colors.cardBorder)
-                    .frame(width: index == current ? 28 : 6, height: index == current ? 5 : 6)
+                    .fill(index == current ? Constants.Colors.bookedGreen : Constants.Colors.cardBorder)
+                    .frame(width: index == current ? 22 : 6, height: 6)
             }
         }
         .frame(maxWidth: .infinity)
@@ -183,7 +183,8 @@ struct ProfileView: View {
                         Rectangle()
                             .fill(Constants.Colors.cardBorder)
                             .frame(height: 1)
-                            .padding(.horizontal, 16)
+                            .padding(.leading, 100)
+                            .padding(.trailing, 16)
                     }
                 }
             }

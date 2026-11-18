@@ -12,18 +12,23 @@ struct FavoriteRowView: View {
     var onTap: () -> Void = {}
     var onUnfavorite: () -> Void = {}
 
+    @ScaledMetric(relativeTo: .body) private var titleSize: CGFloat = 17
+
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 0) {
             HStack(spacing: 14) {
                 LibraryThumbnail(url: library.displayImageURL)
-                    .frame(width: 90, height: 90)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .frame(width: 72, height: 72)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(library.title)
-                        .font(.system(size: 18))
+                        .font(.system(size: titleSize))
                         .foregroundStyle(Constants.Colors.primaryText)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     LibrarySubtitle(library: library)
                 }
@@ -43,8 +48,9 @@ struct FavoriteRowView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Remove \(library.title) from favorites")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.leading, 14)
+        .padding(.trailing, 4)
+        .padding(.vertical, 14)
     }
 }
 
