@@ -54,7 +54,6 @@ final class LibraryDetailViewModel {
         [library.spaceInfo.library, library.spaceInfo.reservationType.label] + library.features.spaceFeatures
     }
 
-    /// Walk-in spaces have nothing to book, so the button is hidden.
     var showsBookButton: Bool {
         library.spaceInfo.reservationType != .walkIn
     }

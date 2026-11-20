@@ -28,12 +28,15 @@ struct HomeView: View {
     @State private var viewModel: HomeViewModel
 
     @State private var showFilters = false
-    @State private var expandedGroups: Set<FilterGroup> = []
     @State private var selectedLibrary: Library?
     @State private var showSearch = false
 
-    init(libraries: [Library] = Library.sampleData, favorites: FavoritesStore = FavoritesStore()) {
-        _viewModel = State(initialValue: HomeViewModel(libraries: libraries, favorites: favorites))
+    init(
+        libraries: [Library] = Library.sampleData,
+        favorites: FavoritesStore = FavoritesStore(),
+        filters: FilterStore = FilterStore()
+    ) {
+        _viewModel = State(initialValue: HomeViewModel(libraries: libraries, favorites: favorites, filters: filters))
     }
 
     private let columns = [
@@ -86,7 +89,7 @@ struct HomeView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .sheet(isPresented: $showFilters) {
-            filterSheet
+            FilterSheetView(filters: viewModel.filters, libraries: viewModel.libraries)
         }
 
         .fullScreenCover(item: $selectedLibrary) { library in
@@ -155,23 +158,7 @@ struct HomeView: View {
     }
 
     private var chipRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ChipView(title: "All", isSelected: !viewModel.availableNow) {
-                    viewModel.availableNow = false
-                }
-                ChipView(title: "Available Now", isSelected: viewModel.availableNow) {
-                    viewModel.availableNow = true
-                }
-                ForEach(viewModel.activeFilters, id: \.self) { f in
-                    ChipView(title: f.value, isSelected: true, isRemovable: true) {
-                        viewModel.toggle(f.group, f.value)
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .padding(.vertical, 14)
+        FilterChipRow(filters: viewModel.filters)
     }
 
     private var sectionHeader: some View {
@@ -184,84 +171,6 @@ struct HomeView: View {
                 Button("Clear all") { viewModel.clearAll() }
                     .font(.system(size: 14))
                     .foregroundStyle(Constants.Colors.secondaryText)
-            }
-        }
-    }
-
-    private var filterSheet: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack {
-                    Text("Filters")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Constants.Colors.primaryText)
-                    Spacer()
-                    Button("Clear all") { viewModel.clearFilters() }
-                        .font(.system(size: 14))
-                        .foregroundStyle(Constants.Colors.secondaryText)
-                }
-
-                filterSection("Library", group: .library, options: viewModel.libraryOptions, collapsedCount: 6)
-                filterSection("Reservation", group: .reservation, options: viewModel.reservationOptions)
-                filterSection("Noise Level", group: .noise, options: viewModel.noiseOptions)
-                filterSection("Space Type", group: .spaceType, options: viewModel.spaceTypeOptions, collapsedCount: 9)
-                filterSection("Features", group: .feature, options: viewModel.featureOptions, collapsedCount: 10)
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 28)
-            .padding(.bottom, 16)
-        }
-        .safeAreaInset(edge: .bottom) {
-            Button { showFilters = false } label: {
-                Text("Show \(viewModel.filtered.count) rooms")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(Constants.Colors.bookedGreen, in: Capsule())
-                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 8)
-            .padding(.bottom, 8)
-        }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(32)
-        .presentationBackground(Constants.Colors.cardSurface)
-    }
-
-    private func filterSection(_ title: String, group: FilterGroup, options: [FilterOption], collapsedCount: Int? = nil) -> some View {
-        let isExpanded = expandedGroups.contains(group)
-        let canCollapse = collapsedCount.map { options.count > $0 } ?? false
-        let visible = canCollapse && !isExpanded ? Array(options.prefix(collapsedCount ?? options.count)) : options
-
-        return VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 18))
-                .foregroundStyle(Constants.Colors.primaryText)
-
-            FlowLayout(spacing: 8) {
-                ForEach(visible, id: \.self) { option in
-                    ChipView(
-                        title: option.count.map { "\(option.value) · \($0)" } ?? option.value,
-                        isSelected: viewModel.isOn(group, option.value)
-                    ) {
-                        viewModel.toggle(group, option.value)
-                    }
-                }
-                if canCollapse {
-                    Button(isExpanded ? "See less" : "See more") {
-                        withAnimation {
-                            if !expandedGroups.insert(group).inserted { expandedGroups.remove(group) }
-                        }
-                    }
-                    .font(.system(size: 14))
-                    .underline()
-                    .foregroundStyle(Constants.Colors.primaryText)
-                    .padding(.horizontal, 8)
-                    .frame(height: 36)
-                }
             }
         }
     }

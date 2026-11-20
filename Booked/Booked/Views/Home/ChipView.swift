@@ -38,12 +38,17 @@ struct ChipView: View {
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
+    /// Tolerance for floating-point error: the width we report is exactly the sum of the
+    /// items, so without this the placement pass can wrap an item that the sizing pass kept
+    /// on the same row (making content overflow the reported height).
+    private let epsilon: CGFloat = 0.5
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? .infinity
         var x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0, maxW: CGFloat = 0
         for v in subviews {
             let s = v.sizeThatFits(.unspecified)
-            if x + s.width > width, x > 0 { x = 0; y += rowH + spacing; rowH = 0 }
+            if x + s.width > width + epsilon, x > 0 { x = 0; y += rowH + spacing; rowH = 0 }
             x += s.width + spacing
             rowH = max(rowH, s.height)
             maxW = max(maxW, x - spacing)
@@ -55,7 +60,7 @@ struct FlowLayout: Layout {
         var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
         for v in subviews {
             let s = v.sizeThatFits(.unspecified)
-            if x + s.width > bounds.maxX, x > bounds.minX { x = bounds.minX; y += rowH + spacing; rowH = 0 }
+            if x + s.width > bounds.maxX + epsilon, x > bounds.minX { x = bounds.minX; y += rowH + spacing; rowH = 0 }
             v.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(s))
             x += s.width + spacing
             rowH = max(rowH, s.height)

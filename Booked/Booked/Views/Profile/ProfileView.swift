@@ -141,6 +141,7 @@ struct ProfileView: View {
             HStack {
                 Text("Favorited")
                     .font(.system(size: 18))
+                    .fontWeight(.medium)
                     .foregroundStyle(Constants.Colors.primaryText)
 
                 Spacer()

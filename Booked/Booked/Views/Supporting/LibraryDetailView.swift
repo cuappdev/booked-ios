@@ -9,6 +9,8 @@ import SwiftUI
 
 struct LibraryDetailView: View {
     @State private var viewModel: LibraryDetailViewModel
+   
+    @Environment(\.showLibraryOnMap) private var showLibraryOnMap
 
     init(
         library: Library,
@@ -154,6 +156,7 @@ struct LibraryDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(viewModel.library.title)
                 .font(.system(size: 24))
+                .fontWeight(.medium)
                 .foregroundStyle(Constants.Colors.bookedGreen)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -183,6 +186,7 @@ struct LibraryDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Features")
                 .font(.system(size: 18))
+                .fontWeight(.medium)
                 .foregroundStyle(Constants.Colors.libraryHeading)
 
             ForEach(viewModel.library.features.soundLevel, id: \.self) {
@@ -208,25 +212,15 @@ struct LibraryDetailView: View {
     }
 
     private var locationSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Location")
-                .font(.system(size: 18))
-                .foregroundStyle(Constants.Colors.libraryHeading)
+        LibraryLocationSection(
+            library: viewModel.library,
+            onShowOnMap: showOnMap
+        )
+    }
 
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Constants.Colors.cardBorder.opacity(0.5))
-                .frame(height: 160)
-                .overlay {
-                    VStack(spacing: 8) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.title2)
-
-                        Text(viewModel.library.spaceInfo.library)
-                            .font(.system(size: 15))
-                    }
-                    .foregroundStyle(Constants.Colors.secondaryText)
-                }
-        }
+    private func showOnMap() {
+        viewModel.onBack()
+        showLibraryOnMap(viewModel.library)
     }
 
     private var divider: some View {

@@ -16,7 +16,8 @@ struct FavoriteSortSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Sort by")
-                .font(.system(size: 24))
+                .font(.system(size: 21))
+                .fontWeight(.medium)
                 .foregroundStyle(Constants.Colors.primaryText)
 
             VStack(alignment: .leading, spacing: 16) {
