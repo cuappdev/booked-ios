@@ -18,7 +18,7 @@ struct LogoutConfirmationView: View {
                 .onTapGesture(perform: onCancel)
 
             VStack(spacing: 8) {
-                Image(systemName: "rectangle.portrait.and.arrow.right")
+                Image("logout_dark_icon")
                     .font(.system(size: 28))
                     .foregroundStyle(Constants.Colors.primaryText)
 

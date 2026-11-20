@@ -8,29 +8,66 @@
 import SwiftUI
 
 struct ContentView: View {
-    
+
     @State private var selectedTab: Screen = .home
-    @State private var favorites = FavoritesStore()
+    @State private var favorites: FavoritesStore
+    @State private var filters: FilterStore
+    @State private var mapViewModel: MapViewModel
     @State private var showLogoutConfirmation = false
+    @State private var hasVisitedMap = false
+
+    init() {
+        let favorites = FavoritesStore()
+        let filters = FilterStore()
+        _favorites = State(initialValue: favorites)
+        _filters = State(initialValue: filters)
+        _mapViewModel = State(initialValue: MapViewModel(filters: filters, favorites: favorites))
+    }
+
+    private func showOnMap(_ library: Library) {
+        selectedTab = .map
+        mapViewModel.focus(on: library)
+    }
+
+    private func tabContent<Content: View>(_ tab: Screen, @ViewBuilder _ content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .opacity(selectedTab == tab ? 1 : 0)
+            .allowsHitTesting(selectedTab == tab)
+            .accessibilityHidden(selectedTab != tab)
+    }
+
+    private var hidesTabBar: Bool {
+        selectedTab == .map && mapViewModel.isSheetExpanded
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Group {
-                switch selectedTab {
-                case .home:
-                    HomeView(favorites: favorites)
-                case .map:
-                    MapView()
-                case .profile:
-                    ProfileView(
-                        favorites: favorites,
-                        onRequestLogOut: { showLogoutConfirmation = true }
-                    )
+            tabContent(.home) {
+                HomeView(favorites: favorites, filters: filters)
+            }
+
+            if hasVisitedMap || selectedTab == .map {
+                tabContent(.map) {
+                    MapView(viewModel: mapViewModel)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            CustomTabBar(selectedTab: $selectedTab)
+            tabContent(.profile) {
+                ProfileView(
+                    favorites: favorites,
+                    onRequestLogOut: { showLogoutConfirmation = true }
+                )
+            }
+
+            CustomTabBar(
+                selectedTab: $selectedTab,
+                style: selectedTab == .map ? .overMap : .solid
+            )
+            .offset(y: hidesTabBar ? 180 : 0)
+            .opacity(hidesTabBar ? 0 : 1)
+            .allowsHitTesting(!hidesTabBar)
+            .animation(.spring(duration: 0.35), value: hidesTabBar)
 
             if showLogoutConfirmation {
                 LogoutConfirmationView(
@@ -45,16 +82,28 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: showLogoutConfirmation)
         .background(Constants.Colors.creamBg.ignoresSafeArea())
+        .environment(\.showLibraryOnMap, { library in showOnMap(library) })
+        .onChange(of: selectedTab) {
+            if selectedTab == .map { hasVisitedMap = true }
+        }
     }
 }
 
 // MARK: - Custom Tab Bar
 
 struct CustomTabBar: View {
-    @Binding var selectedTab: Screen
-    @Namespace private var underlineNamespace
 
-    private let barHeight: CGFloat = 60
+    enum Style: Equatable { case solid, overMap }
+
+    static let height: CGFloat = 60
+
+    static let gradientOverhang: CGFloat = 12
+
+    static let mapOverlayClearance: CGFloat = height + gradientOverhang + 4
+
+    @Binding var selectedTab: Screen
+    var style: Style = .solid
+    @Namespace private var underlineNamespace
 
     var body: some View {
         HStack(spacing: 60) {
@@ -63,17 +112,48 @@ struct CustomTabBar: View {
             }
         }
         .offset(y: 14)
-        .frame(height: barHeight)
+        .frame(height: Self.height)
         .frame(maxWidth: .infinity)
-        .background(
-            Constants.Colors.creamBg
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(Constants.Colors.cardBorder)
-                        .frame(height: 1)
-                }
-                .ignoresSafeArea(edges: .bottom)
-        )
+        .background(alignment: .bottom) { tapBlocker }
+        .background(alignment: .bottom) { solidBackground }
+        .background(alignment: .bottom) { mapGradientBackground }
+        .animation(.easeInOut(duration: 0.35), value: style)
+    }
+
+    private var tapBlocker: some View {
+        Color.black.opacity(0.001)
+            .ignoresSafeArea(edges: .bottom)
+    }
+
+
+    private var solidBackground: some View {
+        Constants.Colors.creamBg
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(Constants.Colors.cardBorder)
+                    .frame(height: 1)
+            }
+            .ignoresSafeArea(edges: .bottom)
+            .opacity(style == .solid ? 1 : 0)
+    }
+
+
+    private var mapGradientBackground: some View {
+        Constants.Colors.creamBg
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(0), location: 0),
+                        .init(color: .black.opacity(0.85), location: 0.55),
+                        .init(color: .black, location: 1)
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
+            .padding(.top, -Self.gradientOverhang)
+            .ignoresSafeArea(edges: .bottom)
+            .opacity(style == .overMap ? 1 : 0)
+            .allowsHitTesting(false)
     }
 
     @ViewBuilder
@@ -135,7 +215,7 @@ struct CustomTabBar: View {
         }
         .contentShape(Rectangle())
     }
-    
+
 }
 
 #Preview {

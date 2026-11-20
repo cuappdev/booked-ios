@@ -23,6 +23,7 @@ struct RecentBookingCard: View {
                 Text(library.title)
                     .font(.system(size: titleSize))
                     .foregroundStyle(Constants.Colors.primaryText)
+                    .fontWeight(.medium)
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
                     .multilineTextAlignment(.leading)

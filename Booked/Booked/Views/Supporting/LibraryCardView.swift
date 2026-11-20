@@ -82,7 +82,7 @@ struct LibraryCardView: View {
         Button(action: onToggleFavorite) {
             Image(systemName: isFavorite ? "heart.fill" : "heart")
                 .font(.system(size: 18))
-                .foregroundStyle(isFavorite ? Color.red : Constants.Colors.bookedGreen)
+                .foregroundStyle(isFavorite ? Constants.Colors.hearted : Constants.Colors.bookedGreen)
                 .frame(width: 38, height: 38)
                 .background(.white.opacity(0.85), in: Circle())
         }
